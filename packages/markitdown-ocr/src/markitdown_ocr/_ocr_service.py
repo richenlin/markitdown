@@ -1,9 +1,10 @@
 """
 OCR Service Layer for MarkItDown
-Provides LLM Vision-based image text extraction.
+Provides LLM Vision-based and offline Tesseract-based image text extraction.
 """
 
 import base64
+import sys
 from typing import Any, BinaryIO
 from dataclasses import dataclass
 
@@ -18,6 +19,64 @@ class OCRResult:
     confidence: float | None = None
     backend_used: str | None = None
     error: str | None = None
+
+
+_tesseract_exc_info = None
+try:
+    import pytesseract
+    from PIL import Image as _PILImage
+except ImportError:
+    _tesseract_exc_info = sys.exc_info()
+
+
+class TesseractOCRService:
+    """Offline OCR service using Tesseract via pytesseract. No network required."""
+
+    def __init__(
+        self,
+        lang: str = "chi_sim+eng",
+        tesseract_cmd: str | None = None,
+    ) -> None:
+        """
+        Args:
+            lang: Tesseract language string, e.g. "chi_sim+eng" for Simplified Chinese + English.
+                  Install language packs: sudo apt install tesseract-ocr-chi-sim
+            tesseract_cmd: Path to tesseract binary (auto-detected if None).
+        """
+        self.lang = lang
+        if tesseract_cmd:
+            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+
+    def extract_text(
+        self,
+        image_stream: BinaryIO,
+        prompt: str | None = None,
+        stream_info: "StreamInfo | None" = None,
+        **kwargs: Any,
+    ) -> OCRResult:
+        """Extract text offline using Tesseract OCR."""
+        if _tesseract_exc_info is not None:
+            return OCRResult(
+                text="",
+                backend_used="tesseract",
+                error=(
+                    "pytesseract is not installed. "
+                    "Run: pip install pytesseract  and  sudo apt install tesseract-ocr tesseract-ocr-chi-sim"
+                ),
+            )
+
+        try:
+            image_stream.seek(0)
+            img = _PILImage.open(image_stream)
+            text = pytesseract.image_to_string(img, lang=self.lang)
+            return OCRResult(
+                text=text.strip(),
+                backend_used="tesseract",
+            )
+        except Exception as e:
+            return OCRResult(text="", backend_used="tesseract", error=str(e))
+        finally:
+            image_stream.seek(0)
 
 
 class LLMVisionOCRService:

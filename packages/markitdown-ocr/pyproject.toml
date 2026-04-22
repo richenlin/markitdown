@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "markitdown-ocr"
 dynamic = ["version"]
-description = 'OCR plugin for MarkItDown - Extracts text from images in PDF, DOCX, PPTX, and XLSX via LLM Vision'
+description = 'OCR plugin for MarkItDown - Extracts text from images (PNG/JPG), PDF, DOCX, PPTX, and XLSX via offline Tesseract or LLM Vision'
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -37,10 +37,21 @@ dependencies = [
   "Pillow>=9.0.0",
 ]
 
-# llm_client is passed in by the user (same as for markitdown image descriptions);
-# install openai or any OpenAI-compatible SDK separately.
+# Optional extras — install what matches your chosen OCR backend.
 [project.optional-dependencies]
+# Offline OCR via Tesseract (requires system package: sudo apt install tesseract-ocr tesseract-ocr-chi-sim)
+tesseract = [
+  "pytesseract>=0.3.10",
+  "Pillow>=9.0.0",
+]
+# Online OCR via LLM Vision (OpenAI-compatible API)
 llm = [
+  "openai>=1.0.0",
+]
+# Both backends
+all = [
+  "pytesseract>=0.3.10",
+  "Pillow>=9.0.0",
   "openai>=1.0.0",
 ]
 
