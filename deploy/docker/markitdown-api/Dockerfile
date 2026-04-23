@@ -23,7 +23,7 @@ RUN pip --no-cache-dir install \
     "uvicorn[standard]>=0.29.0" \
     "python-multipart>=0.0.9"
 
-COPY docker/markitdown-api/app.py /app/app.py
+COPY deploy/docker/markitdown-api/app.py /app/app.py
 
 EXPOSE 8778
 

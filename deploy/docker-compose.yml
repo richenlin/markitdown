@@ -34,8 +34,8 @@ services:
 
   markitdown-api:
     build:
-      context: .
-      dockerfile: docker/markitdown-api/Dockerfile
+      context: ..
+      dockerfile: deploy/docker/markitdown-api/Dockerfile
     image: markitdown-api:latest
     container_name: markitdown-api
     restart: unless-stopped
