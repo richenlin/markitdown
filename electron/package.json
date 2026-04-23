@@ -31,7 +31,8 @@
       "main.js",
       "preload.js",
       "icon.png",
-      "renderer/**/*"
+      "renderer/**/*",
+      "node_modules/**/*"
     ],
     "linux": {
       "target": ["AppImage", "deb"],
