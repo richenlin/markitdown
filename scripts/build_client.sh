@@ -30,7 +30,9 @@ fi
 
 cd "$ELECTRON_DIR"
 echo "[build-client] Installing dependencies..."
-pnpm install --frozen-lockfile
+# 使用 --no-frozen-lockfile：当 package.json 变更后（如移除依赖）自动更新锁文件，
+# 避免锁文件与 package.json 不同步导致的 ERR_PNPM_OUTDATED_LOCKFILE。
+pnpm install --no-frozen-lockfile
 echo "[build-client] Building Electron client${PLATFORM:+ for $PLATFORM}..."
 # shellcheck disable=SC2086
 pnpm run build $BUILD_FLAG

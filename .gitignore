@@ -168,3 +168,4 @@ src/.DS_Store
 .cursorrules
 .opencode
 .opencode/.knowledge-context.md
+electron/node_modules/
