@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Build Docker images via docker compose.
-# Usage: ./scripts/build_image.sh [--no-cache] [--tag <tag>]
+# Build Docker images via docker compose / docker-compose.
+# Usage: ./scripts/build_image.sh [--no-cache] [--tag <tag>] [--service <service>]
 #
 # Options:
 #   --no-cache     Pass --no-cache to docker compose build
@@ -33,11 +33,22 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 
+# Support both 'docker compose' (plugin, v20.10+) and 'docker-compose' (standalone)
+if docker compose version &>/dev/null 2>&1; then
+  COMPOSE="docker compose"
+elif command -v docker-compose &>/dev/null; then
+  COMPOSE="docker-compose"
+else
+  echo "[error] Neither 'docker compose' nor 'docker-compose' found."
+  exit 1
+fi
+
+echo "[build-image] Using: $COMPOSE"
 echo "[build-image] Building from $DEPLOY_DIR ..."
 cd "$DEPLOY_DIR"
 
 # shellcheck disable=SC2086
-docker compose build $NO_CACHE ${SERVICE:-}
+$COMPOSE build $NO_CACHE ${SERVICE:-}
 
 if [[ -n "$IMAGE_TAG" ]]; then
   echo "[build-image] Tagging images with :$IMAGE_TAG ..."
@@ -50,4 +61,4 @@ if [[ -n "$IMAGE_TAG" ]]; then
 fi
 
 echo "[build-image] Done."
-docker compose images
+$COMPOSE images
