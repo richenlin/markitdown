@@ -29,8 +29,10 @@ RUN pip --no-cache-dir install \
     /app/packages/markitdown-sample-plugin
 
 # Default USERID and GROUPID
-ARG USERID=nobody
-ARG GROUPID=nogroup
+# Defaults to root so the container can write to any host-mounted directory.
+# Override at runtime with: docker run --user $(id -u):$(id -g) ...
+ARG USERID=root
+ARG GROUPID=root
 
 USER $USERID:$GROUPID
 
