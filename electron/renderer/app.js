@@ -101,68 +101,55 @@ function showToast(message, type) {
   }, 2000);
 }
 
-async function convertFile(filePath) {
-  const apiUrl = getSavedApiUrl();
-
-  setStatus('uploading');
-  const startTime = Date.now();
-
-  try {
-    if (isElectron()) {
-      const result = await window.markitdownAPI.convertFile(filePath, apiUrl);
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      showResult(result.markdown, result.filename, elapsed);
-      setStatus('done');
-    } else {
-      const resp = await fetch(`${apiUrl}/convert`, {
-        method: 'POST',
-        body: createBrowserFormData(filePath),
-      });
-      if (!resp.ok) throw new Error(`API Error ${resp.status}`);
-      const result = await resp.json();
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      showResult(result.markdown, result.filename, elapsed);
-      setStatus('done');
-    }
-  } catch (err) {
-    setStatus('error', err.message);
-  }
-}
-
-function createBrowserFormData(file) {
-  const form = new FormData();
-  form.append('file', file);
-  return form;
-}
-
-async function handleFile(fileOrPath) {
-  if (typeof fileOrPath === 'string') {
-    await convertFile(fileOrPath);
-  } else if (fileOrPath instanceof File) {
-    if (isElectron()) {
-      await convertFile(fileOrPath.path);
-    } else {
-      await convertFileBrowser(fileOrPath);
-    }
-  }
-}
-
-async function convertFileBrowser(file) {
+// 统一上传函数：无论 Electron 还是浏览器，均用渲染进程原生 fetch + FormData
+// Electron 路径：主进程只读文件字节 → ArrayBuffer → Blob → FormData → fetch
+// 浏览器路径：直接用 File 对象 → FormData → fetch
+async function uploadAndConvert(fileOrPath) {
   const apiUrl = getSavedApiUrl();
   setStatus('uploading');
   const startTime = Date.now();
 
   try {
+    let blob, filename;
+
+    if (typeof fileOrPath === 'string') {
+      // Electron：通过 IPC 读取文件字节，转为 Blob
+      const arrayBuffer = await window.markitdownAPI.readFileAsBuffer(fileOrPath);
+      filename = fileOrPath.split(/[\\/]/).pop();
+      blob = new Blob([arrayBuffer]);
+    } else {
+      // 浏览器或 Electron 拖拽 File 对象
+      filename = fileOrPath.name;
+      blob = fileOrPath;
+    }
+
     const form = new FormData();
-    form.append('file', file);
-    const resp = await fetch(`${apiUrl}/convert`, { method: 'POST', body: form });
-    if (!resp.ok) throw new Error(`API Error ${resp.status}`);
+    form.append('file', blob, filename);
+
+    const resp = await fetch(`${apiUrl}/api/convert`, { method: 'POST', body: form });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`API ${resp.status}: ${text}`);
+    }
     const result = await resp.json();
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     showResult(result.markdown, result.filename, elapsed);
     setStatus('done');
   } catch (err) {
     setStatus('error', err.message);
+  }
+}
+
+async function handleFile(fileOrPath) {
+  if (typeof fileOrPath === 'string') {
+    await uploadAndConvert(fileOrPath);
+  } else if (fileOrPath instanceof File) {
+    // Electron 拖拽时 File 对象有 .path 属性，优先用路径避免大文件内存复制
+    if (isElectron() && fileOrPath.path) {
+      await uploadAndConvert(fileOrPath.path);
+    } else {
+      await uploadAndConvert(fileOrPath);
+    }
   }
 }
 
@@ -186,7 +173,7 @@ dropZone.addEventListener('drop', (e) => {
 dropZone.addEventListener('click', async () => {
   if (isElectron()) {
     const filePath = await window.markitdownAPI.openFile();
-    if (filePath) await convertFile(filePath);
+    if (filePath) await uploadAndConvert(filePath);
   } else {
     fileInput.click();
   }

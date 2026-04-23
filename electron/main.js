@@ -1,8 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, clipboard } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const FormData = require('form-data');
-const fetch = require('node-fetch');
 
 const WIN_CONFIG = {
   width: 860,
@@ -54,16 +52,12 @@ function registerIPC() {
     return filePaths[0] || null;
   });
 
-  ipcMain.handle('convert:file', async (_, { filePath, apiUrl }) => {
+  // 只读文件字节，HTTP 上传由渲染进程的原生 fetch/FormData 完成
+  ipcMain.handle('file:read', async (_, filePath) => {
     const resolvedPath = path.resolve(filePath);
-    const form = new FormData();
-    form.append('file', fs.createReadStream(resolvedPath));
-    const res = await fetch(`${apiUrl}/convert`, { method: 'POST', body: form });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`API Error ${res.status}: ${text}`);
-    }
-    return await res.json();
+    const buffer = fs.readFileSync(resolvedPath);
+    // 返回 ArrayBuffer，IPC 会自动序列化
+    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   });
 
   ipcMain.handle('dialog:save-file', async (_, { defaultName, content }) => {
