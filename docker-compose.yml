@@ -1,0 +1,66 @@
+name: markitdown
+
+services:
+
+  ollama:
+    build:
+      context: ./docker/ollama
+    image: markitdown-ollama:latest
+    container_name: markitdown-ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_MODEL: qwen2-vl:7b
+      OLLAMA_NUM_PARALLEL: 2
+      OLLAMA_MAX_LOADED_MODELS: 1
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - markitdown-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      start_period: 180s
+      retries: 5
+
+  markitdown-api:
+    build:
+      context: .
+      dockerfile: docker/markitdown-api/Dockerfile
+    image: markitdown-api:latest
+    container_name: markitdown-api
+    restart: unless-stopped
+    environment:
+      LLM_BASE_URL: http://ollama:11434/v1
+      LLM_MODEL: qwen2-vl:7b
+      LLM_API_KEY: ollama
+      LLM_PROMPT: "请精确提取图片中所有文字，严格保持原始顺序和段落结构，只返回纯文字。"
+    ports:
+      - "8778:8778"
+    networks:
+      - markitdown-net
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8778/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  markitdown-net:
+    driver: bridge
+
+volumes:
+  ollama-data:
+    name: markitdown-ollama-models

@@ -1,0 +1,48 @@
+{
+  "name": "markitdown-desktop",
+  "version": "1.0.0",
+  "description": "MarkItDown 文档转 Markdown 桌面客户端",
+  "main": "main.js",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "sharp": "^0.33.0"
+  },
+  "build": {
+    "appId": "com.markitdown.desktop",
+    "productName": "MarkItDown",
+    "icon": "icon.png",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png",
+      "renderer/**/*"
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.utilities"
+    }
+  }
+}

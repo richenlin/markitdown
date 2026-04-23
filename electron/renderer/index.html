@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarkItDown 文档转换</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <h1 class="header-title">MarkItDown 文档转换</h1>
+    <button id="settingsBtn" class="settings-btn" title="设置">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M16.18 12.32a1.25 1.25 0 00.25 1.38l.04.04a1.516 1.516 0 01-1.07 2.59 1.516 1.516 0 01-1.07-.44l-.04-.04a1.25 1.25 0 00-1.38-.25 1.25 1.25 0 00-.76 1.15v.12a1.517 1.517 0 01-3.033 0v-.06a1.25 1.25 0 00-.82-1.15 1.25 1.25 0 00-1.38.25l-.04.04a1.517 1.517 0 11-2.14-2.14l.04-.04a1.25 1.25 0 00.25-1.38 1.25 1.25 0 00-1.14-.76h-.12a1.517 1.517 0 010-3.033h.06a1.25 1.25 0 001.15-.82 1.25 1.25 0 00-.25-1.38l-.04-.04a1.517 1.517 0 112.14-2.14l.04.04a1.25 1.25 0 001.38.25h.06a1.25 1.25 0 00.76-1.15v-.12a1.517 1.517 0 013.033 0v.06a1.25 1.25 0 00.76 1.15 1.25 1.25 0 001.38-.25l.04-.04a1.517 1.517 0 112.14 2.14l-.04.04a1.25 1.25 0 00-.25 1.38v.06a1.25 1.25 0 001.15.76h.12a1.517 1.517 0 010 3.033h-.06a1.25 1.25 0 00-1.15.76z" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="main-content">
+    <section class="drop-zone" id="dropZone">
+      <div class="drop-zone-content">
+        <div class="drop-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 12 15 15"/>
+          </svg>
+        </div>
+        <p class="drop-text-primary">拖拽文件到此处</p>
+        <p class="drop-text-secondary">或点击选择文件</p>
+        <p class="drop-text-hint">支持：PDF &middot; DOCX &middot; PPTX &middot; XLSX &middot; JPG &middot; PNG &middot; CSV &middot; TXT</p>
+      </div>
+      <input type="file" id="fileInput" hidden
+        accept=".pdf,.docx,.pptx,.xlsx,.jpg,.jpeg,.png,.csv,.txt,.md">
+    </section>
+
+    <div class="divider" id="resultDivider" style="display: none;">
+      <span class="divider-text">转换结果</span>
+    </div>
+
+    <section class="result-section" id="resultSection" style="display: none;">
+      <div class="result-header">
+        <span class="result-filename" id="resultFilename"></span>
+        <span class="result-elapsed" id="resultElapsed"></span>
+      </div>
+      <pre class="result-content" id="resultContent"></pre>
+    </section>
+
+    <div class="loading-bar" id="loadingBar" style="display: none;">
+      <div class="loading-indeterminate"></div>
+      <p class="loading-text">正在转换，请稍候...</p>
+    </div>
+
+    <div class="error-message" id="errorMessage" style="display: none;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 4a.75.75 0 011.5 0v3a.75.75 0 01-1.5 0V5zM8 11.5a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
+      </svg>
+      <span id="errorText"></span>
+    </div>
+  </main>
+
+  <footer class="action-bar" id="actionBar" style="display: none;">
+    <button class="action-btn" id="copyBtn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="5" y="5" width="9" height="9" rx="1.5"/>
+        <path d="M3 11V3a1.5 1.5 0 011.5-1.5H11"/>
+      </svg>
+      复制 Markdown
+    </button>
+    <button class="action-btn" id="saveBtn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M13 14H3a1 1 0 01-1-1V3a1 1 0 011-1h7l4 4v7a1 1 0 01-1 1z"/>
+        <path d="M5 14v-4h6v4"/>
+        <path d="M5 2v3h4V2"/>
+      </svg>
+      保存文件
+    </button>
+    <span class="action-info" id="actionInfo"></span>
+  </footer>
+
+  <div class="modal-overlay" id="settingsModal" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>设置</h2>
+        <button class="modal-close" id="settingsClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label" for="apiUrlInput">服务端 URL</label>
+        <input type="text" class="modal-input" id="apiUrlInput"
+          placeholder="http://localhost:8778">
+        <p class="modal-hint">修改后自动保存，重启应用生效。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" id="settingsSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

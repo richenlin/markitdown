@@ -1,0 +1,12 @@
+## task-002: electron-client
+
+### 遇到的问题
+- 无
+
+### 关键决策
+- 严格按照实施方案.md 第三部分的规格实现所有 6 个文件
+- main.js 注册了 4 个 IPC 处理器：dialog:open-file、convert:file、dialog:save-file、clipboard:write
+- preload.js 通过 contextBridge 暴露 window.markitdownAPI 对象（isElectron, defaultApiUrl, openFile, convertFile, saveFile, copyToClipboard）
+- renderer/app.js 同时兼容 Electron 和浏览器环境（Electron 模式使用 IPC，浏览器模式使用 fetch + FormData）
+- 使用 localStorage 持久化服务端 URL 设置
+- 参考了 voice_assistant/electron 项目的风格模式（icon 处理、窗口配置、打包配置）
